@@ -1,0 +1,17 @@
+{
+  "name": "discord-js-tu",
+  "version": "1.0.0",
+  "description": "はじめてのdiscord.js",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon index.js"
+  },
+  "keywords": [],
+  "author": "もっくん",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.4.5"
+  }
+}
