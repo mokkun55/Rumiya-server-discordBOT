@@ -1,6 +1,7 @@
 const { Client,
         Events,
-        GatewayIntentBits } = require("discord.js");
+        GatewayIntentBits, 
+        messageLink} = require("discord.js");
 require('dotenv').config();
 
 const client = new Client({
@@ -8,7 +9,7 @@ const client = new Client({
   restTimeOffset: 100
 });
 
-// ---ここまでおまじない---
+// ↑↑↑ここまでおまじない↑↑↑
 
 
 // ---botが起動したとき---
@@ -39,7 +40,7 @@ client.on(Events.MessageCreate, async (message) => {
         await message.channel.send(String(result)); //送られてきたchにメッセージをsend
     }
 
-    //ランダム分配
+    //ランダム分配 !team ◯ 丸チームで分配
     if (command === "team") {
         const VCchannel = message.member.voice.channel; //発言者が入っているVC
         if (!VCchannel) { //vc入ってないとき
@@ -52,7 +53,7 @@ client.on(Events.MessageCreate, async (message) => {
         const RandomVCmembers = VCmembers.sort((a, b) => 0.5 - Math.random()); //配列をランダムに並び替え
 
                                 // ---エラー条件---
-        if (args[0] <= 1) { //チーム数が0以下のとき
+        if (isNaN(args[0]) || args[0] <= 1 ) { //args[0]が数字以外のときまたはチーム数が0以下のとき
             message.reply("チーム数は2以上の数で指定してください。")
             return;
         }
@@ -77,21 +78,68 @@ client.on(Events.MessageCreate, async (message) => {
         message.reply(`VCに入っている**${VCmembers.length}人**を**${args[0]}チーム**に分けます\n${teams.map((team, index) => `チーム${index + 1}: ${team.join(", ")}`).join("\n")}`)
         
     }
+
+
+        // ---リアクションテスト用---
+    if (command === 'send') {
+        const sentMessage = await message.channel.send("This is a test message. React to this message!");
+        await sentMessage.react('👍');
+        await sentMessage.react('👎');
+        sentMessage.command = "sendmessage"; //ここでコマンド属性追加してあとで判別できるようにしてる
+    }
+
+    if (command === 'send2') {
+        const sentMessage = await message.channel.send("This is another test message. React to this message!");
+        await sentMessage.react('👍');
+        await sentMessage.react('👎');
+        sentMessage.command = "sendmessage2";
+    }
+
+
+
 })
+
+// ---リアクション反応---
+client.on('messageReactionAdd', async (reaction, user) => {
+    // リアクションが追加されたときの処理
+    if (user.bot) return; // ボット自身のリアクションは無視する
+    const message = reaction.message;
+
+    if (reaction.emoji.name === '☑') {
+        // リアクションが ☑ の場合の処理
+        console.log("☑が押されました")
+        message.reply(`メンションする役職を選択`)
+        .then((sentMessage) => {
+            sentMessage.react('🇦')
+            sentMessage.react('🇧')
+        })
+    }
+
+    
+    if (message.command === "sendmessage") { // コマンド属性がsendmessageのリアクションが押されたら
+        message.reply("sendmessageのリアクション")
+        if (reaction.emoji.name === "👍") { // リアクションごとの処理
+            message.reply("👍")
+        } else {
+            message.reply("👎")
+        }
+    } else if (message.command === "sendmessage2") {
+        message.reply("sendmessage2のリアクション")
+    }
+});
 
 // ---vcに接続したら---
 client.on("voiceStateUpdate", (oldState, newState) => {
     if (newState.channel) {
         // console.log(`${newState.member.displayName} >> ${newState.channel.name}に接続しました`);
         if (newState.channel.name === "ひましてる（新）") { // ひましてる新に接続された処理
-            if (newState.channel.members.size === 1) { //もし、１人なら
+            if (newState.channel.members.size === 4) { //もし、１人なら
                 console.log(`${newState.member.displayName} がVCに一人で接続しました`);
                 //募集 509549950766415872 BOT 944957997271101470
                 newState.guild.channels.resolve('944957997271101470')?.send(`${newState.member.displayName} が一人でVCに接続しました。\n 募集するときは下のリアクションを押してください。`)
                 .then((sentMessage) => {
                     sentMessage.react('☑');
                 })
-                
             }
         }
     }
